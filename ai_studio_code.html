@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Mój Trening</title>
+  
+  <!-- Apple Touch & PWA settings -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mój Trening">
+  <meta name="theme-color" content="#121212">
+
+  <style>
+    :root {
+      --bg-dark: #121214;
+      --card-bg: #1e1e24;
+      --card-alt: #282832;
+      --accent-green: #22c55e;
+      --accent-green-hover: #16a34a;
+      --accent-green-alpha: rgba(34, 197, 94, 0.18);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #374151;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    input, textarea, select {
+      user-select: auto;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(75px + env(safe-area-inset-bottom));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* TYPOGRAFIA & PRZYCISKI */
+    h1, h2, h3 { font-weight: 700; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.25rem; margin-bottom: 0.75rem; }
+    h3 { font-size: 1.1rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--card-alt);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent-green);
+      color: #000;
+      border: none;
+    }
+    .btn-primary:active { background: var(--accent-green-hover); }
+    .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border-color: rgba(239, 68, 68, 0.3); }
+    .btn-blue { background: rgba(59, 130, 246, 0.15); color: var(--blue); border-color: rgba(59, 130, 246, 0.3); }
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 8px; }
+    .btn-block { width: 100%; }
+
+    /* LAYOUT KONTENERA */
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .view-section { display: none; }
+    .view-section.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* KARTY */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    /* DOLNA NAWIGACJA (DLA SAFARI NA iOS) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(65px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+      background: rgba(24, 24, 28, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      width: 20%;
+      height: 100%;
+    }
+    .nav-item svg { width: 22px; height: 22px; margin-bottom: 4px; stroke-width: 2; }
+    .nav-item.active { color: var(--accent-green); }
+
+    /* FORMULARZE */
+    .input-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      background: var(--card-alt);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-green);
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 6px;
+      background: var(--card-alt);
+      color: var(--text-muted);
+    }
+    .badge-green { background: var(--accent-green-alpha); color: var(--accent-green); }
+
+    /* TABELA SERII PODCZAS TRENINGU */
+    .series-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    .series-table th {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-align: center;
+      padding-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .series-table td {
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .series-table input {
+      width: 68px;
+      text-align: center;
+      padding: 10px 4px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 8px;
+    }
+    .btn-check {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--card-alt);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .btn-check.completed {
+      background: var(--accent-green);
+      color: #000;
+      border-color: var(--accent-green);
+    }
+
+    /* BANER TIMERA ODPOCZYNKU */
+    #rest-timer-bar {
+      position: fixed;
+      top: env(safe-area-inset-top);
+      left: 0;
+      right: 0;
+      background: #111827;
+      border-bottom: 2px solid var(--accent-green);
+      padding: 12px 16px;
+      display: none;
+      z-index: 99;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .timer-container {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .timer-digits {
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-family: monospace;
+      color: var(--accent-green);
+    }
+
+    /* ILUSTRACJE SVG ĆWICZEŃ */
+    .exercise-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      background: #18181f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .exercise-thumb svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    @media (min-width: 768px) {
+      .modal-overlay { align-items: center; padding: 20px; }
+    }
+    .modal-content {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 640px;
+      max-height: 85vh;
+      border-radius: 20px 20px 0 0;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 20px;
+    }
+    @media (min-width: 768px) {
+      .modal-content { border-radius: 20px; }
+    }
+    .modal-scroll {
+      overflow-y: auto;
+      flex: 1;
+      padding-top: 10px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TIMER ODPOCZYNKU (GŁÓWNY BANER) -->
+  <div id="rest-timer-bar">
+    <div class="timer-container">
+      <div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Odpoczynek</div>
+        <div id="timer-display" class="timer-digits">01:30</div>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn btn-sm" id="btn-timer-plus">+15s</button>
+        <button class="btn btn-sm" id="btn-timer-toggle">Pauza</button>
+        <button class="btn btn-sm btn-danger" id="btn-timer-skip">Pomiń</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- WIDOK: TRENING W TOKU / WYBÓR -->
+    <section id="view-workout" class="view-section active">
+      <div id="workout-idle-view">
+        <h1>Rozpocznij Trening</h1>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">Wybierz przygotowany plan i zacznij ćwiczyć.</p>
+        <div id="active-plan-picker"></div>
+      </div>
+
+      <div id="workout-active-view" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <span class="badge badge-green">Sesja aktywna</span>
+            <h1 id="active-session-plan-title" style="margin-top: 4px; margin-bottom: 0;">Plan</h1>
+          </div>
+          <button class="btn btn-primary" id="btn-finish-workout">Zakończ trening</button>
+        </div>
+        <div id="active-workout-exercises"></div>
+      </div>
+    </section>
+
+    <!-- WIDOK: PLANY TRENINGOWE -->
+    <section id="view-plans" class="view-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h1>Plany Treningowe</h1>
+        <button class="btn btn-primary btn-sm" id="btn-new-plan">+ Nowy plan</button>
+      </div>
+      <div id="plans-list"></div>
+    </section>
+
+    <!-- WIDOK: HISTORIA -->
+    <section id="view-history" class="view-section">
+      <h1>Historia Treningów</h1>
+      <p style="color: var(--text-muted); margin-bottom: 16px;">Historia wszystkich ukończonych sesji treningowych.</p>
+      <div id="history-list"></div>
+    </section>
+
+    <!-- WIDOK: BIBLIOTEKA ĆWICZEŃ -->
+    <section id="view-exercises" class="view-section">
+      <h1>Baza Ćwiczeń</h1>
+      <div class="input-group" style="display: flex; gap: 8px;">
+        <input type="text" id="exercise-search" placeholder="Szukaj ćwiczenia...">
+        <select id="exercise-muscle-filter" style="max-width: 140px;">
+          <option value="ALL">Wszystkie</option>
+          <option value="Nogi">Nogi</option>
+          <option value="Pośladki">Pośladki</option>
+          <option value="Plecy">Plecy</option>
+          <option value="Klatka">Klatka</option>
+          <option value="Barki">Barki</option>
+          <option value="Biceps">Biceps</option>
+          <option value="Triceps">Triceps</option>
+          <option value="Brzuch">Brzuch</option>
+        </select>
+      </div>
+      <div id="exercises-library-list"></div>
+    </section>
+
+    <!-- WIDOK: USTAWIENIA I KOPIA ZAPASOWA -->
+    <section id="view-settings" class="view-section">
+      <h1>Ustawienia</h1>
+      
+      <div class="card">
+        <h3>Lokalna Baza Danych</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 8px 0 16px;">
+          Wszystkie Twoje dane zapisywane są bezpośrednio w pamięci przeglądarki Safari na tym urządzeniu. 
+          <strong>Dane nie synchronizują się automatycznie pomiędzy iPhonem a iPadem</strong> z przyczyn zachowania prywatności i braku konieczności zakupu płatnej chmury. Użyj poniższego eksportu/importu do przenoszenia planów i historii.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn btn-blue" id="btn-export-json">Eksportuj kopię zapasową (JSON)</button>
+          
+          <label class="btn" style="text-align: center; cursor: pointer;">
+            Importuj z pliku JSON
+            <input type="file" id="import-json-input" accept=".json" style="display: none;">
+          </label>
+
+          <button class="btn btn-danger" id="btn-reset-factory" style="margin-top: 12px;">Przywróć domyślne plany fabryczne</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Dźwięk timera</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">
+          Aplikacja używa wbudowanego Web Audio API (nie wymaga pobierania plików mp3). Sprawdź czy telefon nie ma włączonego wyciszenia sprzętowego (przełącznik Mute).
+        </p>
+        <button class="btn btn-sm" id="btn-test-sound" style="margin-top: 10px;">Testuj gong timera</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: ZAMIANA ĆWICZENIA (WYBÓR TRYBU I ZASTĘPSTWA) -->
+  <div id="swap-exercise-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="swap-modal-title">Zamień ćwiczenie</h3>
+        <button class="btn btn-sm" onclick="App.closeSwapModal()">Zamknij</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">
+        Wybierz z listy nowe ćwiczenie, a następnie zadecyduj o trybie zamiany:
+      </p>
+
+      <div class="input-group">
+        <input type="text" id="swap-search" placeholder="Filtruj listę ćwiczeń...">
+      </div>
+
+      <div class="modal-scroll" id="swap-exercises-list"></div>
+
+      <div style="margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn btn-blue btn-block" id="btn-confirm-swap-session" disabled>
+          1. Tylko w dzisiejszym treningu
+        </button>
+        <button class="btn btn-primary btn-block" id="btn-confirm-swap-permanent" disabled>
+          2. Zmień plan na stałe
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDYCJA / PODGLĄD HISTORII -->
+  <div id="history-edit-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="hist-modal-title">Szczegóły treningu</h3>
+        <button class="btn btn-sm" onclick="App.closeHistoryModal()">Zamknij</button>
+      </div>
+      <div class="modal-scroll" id="hist-modal-body"></div>
+      <div style="margin-top: 12px; display: flex; gap: 8px;">
+        <button class="btn btn-primary btn-block" id="btn-save-hist-changes">Zapisz korekty</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOLNA NAWIGACJA -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-view="workout">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Trening
+    </div>
+    <div class="nav-item" data-view="plans">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Plany
+    </div>
+    <div class="nav-item" data-view="history">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Historia
+    </div>
+    <div class="nav-item" data-view="exercises">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      Ćwiczenia
+    </div>
+    <div class="nav-item" data-view="settings">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Ustawienia
+    </div>
+  </nav>
+
+  <script>
+    /* ==========================================================================
+       1. BIBLIOTEKA IKON I ILUSTRACJI SVG (Lokalne, biomechaniczne wektory)
+       ========================================================================== */
+    const SVG_ILLUSTRATIONS = {
+      legs: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="10" r="5"/><path d="M26 22h12l-2 16 4 20M28 38l-4 20"/><path d="M22 22l-6 10"/></svg>`,
+      deadlift: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="14" r="5"/><path d="M24 20l12 10-6 12 8 16"/><path d="M12 48h40M12 44v8M52 44v8"/><path d="M30 26l6 18"/></svg>`,
+      back: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="12" r="5"/><path d="M22 22h20l-4 16-6 18M26 38l-2 18"/><path d="M16 30l16-6 16 6"/><path d="M12 28h8M44 28h8"/></svg>`,
+      pulldown: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8h48M32 8v10"/><circle cx="32" cy="24" r="5"/><path d="M22 36l10-4 10 4M20 48l12-8 12 8"/><path d="M14 16l8 16M50 16l-8 16"/></svg>`,
+      chest: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 44h44"/><circle cx="24" cy="38" r="4"/><path d="M24 42l16-4M34 38l-6-16 12-2"/><path d="M20 20h24"/></svg>`,
+      shoulders: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="18" r="5"/><path d="M24 28h16v18h-16zM24 46l-4 14M40 46l4 14"/><path d="M14 20h36M18 20v8M46 20v8"/></svg>`,
+      arms: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="12" r="5"/><path d="M26 22h12v14l6 10M26 36l-4 16M38 36l-2 16"/><path d="M44 32a4 4 0 100-8 4 4 0 000 8z"/></svg>`,
+      abs: `<svg viewBox="0 0 64 64" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="42" r="5"/><path d="M18 46l16-4 16 10M28 44l12-14 12 2"/><path d="M10 54h44"/></svg>`,
+      generic: `<svg viewBox="0 0 64 64" fill="none" stroke="#9ca3af" stroke-width="2.5"><circle cx="32" cy="32" r="24"/><path d="M32 20v24M20 32h24"/></svg>`
+    };
+
+    /* ==========================================================================
+       2. BAZA DANYCH POCZĄTKOWYCH (PLANY A, B, C I DOMYŚLNE ĆWICZENIA)
+       ========================================================================== */
+    const DEFAULT_EXERCISES = [
+      { id: "sq_1", name: "Przysiad ze sztangą", category: "Nogi", svg: "legs", desc: "Zejście do kąta prostego lub poniżej, kolana w linii stóp, plecy proste." },
+      { id: "rdl_1", name: "Rumuński martwy ciąg (RDL)", category: "Pośladki", svg: "deadlift", desc: "Ruch zawiasowy w biodrze (hip hinge), lekkie ugięcie w kolanach, plecy neutralne." },
+      { id: "row_1", name: "Wiosłowanie sztangą w opadzie", category: "Plecy", svg: "back", desc: "Przyciąganie sztangi w kierunku pępka, łopatki ściągnięte w fazie szczytowej." },
+      { id: "lat_1", name: "Ściąganie drążka wyciągu do klatki", category: "Plecy", svg: "pulldown", desc: "Pionowy ruch przyciągania, pełna praca mięśni najszerszych grzbietu." },
+      { id: "bp_1", name: "Wyciskanie sztangi leżąc", category: "Klatka", svg: "chest", desc: "Mostkowanie, łopatki spięte, opuszczanie do środkowej części klatki." },
+      { id: "ohp_1", name: "Wyciskanie żołnierskie (OHP)", category: "Barki", svg: "shoulders", desc: "Wyciskanie sztangi nad głowę z klatki w pełnym wyproście tułowia." },
+      { id: "bic_1", name: "Uginanie przedramion ze sztangielkami", category: "Biceps", svg: "arms", desc: "Supinacja nadgarstka, łokcie stabilnie przy ciele." },
+      { id: "tric_1", name: "Wyciskanie francuskie leżąc", category: "Triceps", svg: "arms", desc: "Zginanie w stawach łokciowych do czoła, tricepsy pod stałym napięciem." },
+      { id: "plank_1", name: "Plank (Deska)", category: "Brzuch", svg: "abs", desc: "Mocne napięcie brzucha, pośladków i neutralna pozycja kręgosłupa." }
+    ];
+
+    const DEFAULT_PLANS = [
+      {
+        id: "plan_a",
+        name: "Plan A (Nogi + Plecy)",
+        items: [
+          { exerciseId: "sq_1", sets: 4, targetReps: "6-8", restSec: 120 },
+          { exerciseId: "rdl_1", sets: 3, targetReps: "8-10", restSec: 90 },
+          { exerciseId: "row_1", sets: 4, targetReps: "8-10", restSec: 90 },
+          { exerciseId: "lat_1", sets: 3, targetReps: "10-12", restSec: 75 }
+        ]
+      },
+      {
+        id: "plan_b",
+        name: "Plan B (Klatka + Barki + Ramiona)",
+        items: [
+          { exerciseId: "bp_1", sets: 4, targetReps: "6-8", restSec: 120 },
+          { exerciseId: "ohp_1", sets: 4, targetReps: "8-10", restSec: 90 },
+          { exerciseId: "bic_1", sets: 3, targetReps: "10-12", restSec: 60 },
+          { exerciseId: "tric_1", sets: 3, targetReps: "10-12", restSec: 60 }
+        ]
+      },
+      {
+        id: "plan_c",
+        name: "Plan C (FBW Objętościowy)",
+        items: [
+          { exerciseId: "sq_1", sets: 3, targetReps: "10-12", restSec: 90 },
+          { exerciseId: "row_1", sets: 3, targetReps: "10-12", restSec: 90 },
+          { exerciseId: "bp_1", sets: 3, targetReps: "10-12", restSec: 90 },
+          { exerciseId: "plank_1", sets: 3, targetReps: "45-60s", restSec: 60 }
+        ]
+      }
+    ];
+
+    /* ==========================================================================
+       3. MODUŁ DŹWIĘKOWY (WEB AUDIO API - 100% BEZPŁATNY, BEZ PLIKÓW ZEWNĘTRZNYCH)
+       ========================================================================== */
+    class SoundEngine {
+      static playBeep(freq = 660, type = 'sine', duration = 0.25) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        } catch(e) {
+          console.warn("Audio Context zablokowany przez przeglądarkę", e);
+        }
+      }
+
+      static playRestEndGong() {
+        // Podwójny sygnał na koniec odpoczynku
+        this.playBeep(880, 'sine', 0.2);
+        setTimeout(() => this.playBeep(1100, 'triangle', 0.4), 220);
+      }
+    }
+
+    /* ==========================================================================
+       4. GŁÓWNA APLIKACJA
+       ========================================================================== */
+    const App = {
+      data: {
+        plans: [],
+        exercises: [],
+        history: [],
+        activeWorkout: null
+      },
+
+      timer: {
+        interval: null,
+        remaining: 0,
+        isPaused: false
+      },
+
+      swapState: {
+        exerciseIndex: null,
+        selectedNewExerciseId: null
+      },
+
+      init() {
+        this.loadStorage();
+        this.setupNavigation();
+        this.bindEvents();
+        this.renderAll();
+      },
+
+      loadStorage() {
+        const storedPlans = localStorage.getItem('mt_plans');
+        const storedExercises = localStorage.getItem('mt_exercises');
+        const storedHistory = localStorage.getItem('mt_history');
+        const storedActiveWorkout = localStorage.getItem('mt_active_workout');
+
+        this.data.plans = storedPlans ? JSON.parse(storedPlans) : JSON.parse(JSON.stringify(DEFAULT_PLANS));
+        this.data.exercises = storedExercises ? JSON.parse(storedExercises) : JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
+        this.data.history = storedHistory ? JSON.parse(storedHistory) : [];
+        this.data.activeWorkout = storedActiveWorkout ? JSON.parse(storedActiveWorkout) : null;
+
+        this.saveStorage();
+      },
+
+      saveStorage() {
+        localStorage.setItem('mt_plans', JSON.stringify(this.data.plans));
+        localStorage.setItem('mt_exercises', JSON.stringify(this.data.exercises));
+        localStorage.setItem('mt_history', JSON.stringify(this.data.history));
+        localStorage.setItem('mt_active_workout', JSON.stringify(this.data.activeWorkout));
+      },
+
+      getExercise(id) {
+        return this.data.exercises.find(e => e.id === id) || {
+          id: id,
+          name: "Nieznane ćwiczenie",
+          category: "Inne",
+          svg: "generic",
+          desc: "Brak opisu"
+        };
+      },
+
+      getExerciseSvg(type) {
+        return SVG_ILLUSTRATIONS[type] || SVG_ILLUSTRATIONS['generic'];
+      },
+
+      // Pobieranie ostatnich wykonanych wyników dla porównania
+      getLastPerformance(exerciseId) {
+        for (let i = this.data.history.length - 1; i >= 0; i--) {
+          const session = this.data.history[i];
+          const ex = session.exercises.find(e => e.exerciseId === exerciseId);
+          if (ex && ex.sets && ex.sets.length > 0) {
+            return ex.sets;
+          }
+        }
+        return null;
+      },
+
+      /* ------------------------------------------------------------------------
+         ROZPOCZĘCIE I OBSŁUGA TRENINGU
+         ------------------------------------------------------------------------ */
+      startWorkout(planId) {
+        const plan = this.data.plans.find(p => p.id === planId);
+        if (!plan) return;
+
+        // Przygotowanie niezależnej sesji treningowej
+        const sessionExercises = plan.items.map(item => {
+          const lastSets = this.getLastPerformance(item.exerciseId);
+          const setsData = [];
+          for (let s = 0; s < item.sets; s++) {
+            const prevSet = (lastSets && lastSets[s]) ? lastSets[s] : null;
+            setsData.push({
+              setNumber: s + 1,
+              weight: prevSet ? prevSet.weight : 0,
+              reps: prevSet ? prevSet.reps : 10,
+              completed: false
+            });
+          }
+
+          return {
+            exerciseId: item.exerciseId,
+            historicalName: this.getExercise(item.exerciseId).name,
+            targetReps: item.targetReps,
+            restSec: item.restSec,
+            sets: setsData
+          };
+        });
+
+        this.data.activeWorkout = {
+          planId: plan.id,
+          planName: plan.name,
+          startedAt: new Date().toISOString(),
+          exercises: sessionExercises
+        };
+
+        this.saveStorage();
+        this.renderWorkout();
+      },
+
+      updateSetField(exerciseIndex, setIndex, field, value) {
+        if (!this.data.activeWorkout) return;
+        const set = this.data.activeWorkout.exercises[exerciseIndex].sets[setIndex];
+        if (set) {
+          set[field] = parseFloat(value) || 0;
+          this.saveStorage();
+        }
+      },
+
+      toggleSetCompleted(exerciseIndex, setIndex) {
+        if (!this.data.activeWorkout) return;
+        const ex = this.data.activeWorkout.exercises[exerciseIndex];
+        const currentSet = ex.sets[setIndex];
+        currentSet.completed = !currentSet.completed;
+        this.saveStorage();
+
+        if (currentSet.completed) {
+          this.startRestTimer(ex.restSec || 90);
+        }
+
+        this.renderWorkout();
+      },
+
+      finishWorkout() {
+        if (!this.data.activeWorkout) return;
+
+        if (confirm("Czy chcesz zakończyć i zapisać dzisiejszy trening w historii?")) {
+          const session = {
+            id: 'session_' + Date.now(),
+            planId: this.data.activeWorkout.planId,
+            planName: this.data.activeWorkout.planName,
+            date: new Date().toISOString(),
+            exercises: this.data.activeWorkout.exercises.map(ex => ({
+              exerciseId: ex.exerciseId,
+              name: ex.historicalName, // Trwale zapamiętujemy nazwę z dnia wykonania
+              sets: ex.sets.map(s => ({
+                setNumber: s.setNumber,
+                weight: s.weight,
+                reps: s.reps,
+                completed: s.completed
+              }))
+            }))
+          };
+
+          this.data.history.push(session);
+          this.data.activeWorkout = null;
+          this.stopTimer();
+          this.saveStorage();
+          this.renderWorkout();
+          this.renderHistory();
+          alert("Trening został pomyślnie zapisany w historii!");
+        }
+      },
+
+      cancelActiveWorkout() {
+        if (confirm("Czy na pewno chcesz anulować bieżącą sesję bez zapisywania wyników?")) {
+          this.data.activeWorkout = null;
+          this.stopTimer();
+          this.saveStorage();
+          this.renderWorkout();
+        }
+      },
+
+      /* ------------------------------------------------------------------------
+         ZAMIANA ĆWICZENIA (WYMÓG: TYLKO DZIŚ vs NA STAŁE)
+         ------------------------------------------------------------------------ */
+      openSwapModal(exerciseIndex) {
+        this.swapState.exerciseIndex = exerciseIndex;
+        this.swapState.selectedNewExerciseId = null;
+
+        const currentEx = this.data.activeWorkout.exercises[exerciseIndex];
+        document.getElementById('swap-modal-title').innerText = `Zamień: ${currentEx.historicalName}`;
+        document.getElementById('btn-confirm-swap-session').disabled = true;
+        document.getElementById('btn-confirm-swap-permanent').disabled = true;
+        document.getElementById('swap-search').value = '';
+
+        this.renderSwapList();
+        document.getElementById('swap-exercise-modal').style.display = 'flex';
+      },
+
+      closeSwapModal() {
+        document.getElementById('swap-exercise-modal').style.display = 'none';
+      },
+
+      renderSwapList(filterText = '') {
+        const container = document.getElementById('swap-exercises-list');
+        container.innerHTML = '';
+        
+        const filtered = this.data.exercises.filter(e => 
+          e.name.toLowerCase().includes(filterText.toLowerCase()) || 
+          e.category.toLowerCase().includes(filterText.toLowerCase())
+        );
+
+        filtered.forEach(ex => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.style.padding = '10px';
+          div.style.marginBottom = '8px';
+          div.style.cursor = 'pointer';
+          div.style.display = 'flex';
+          div.style.alignItems = 'center';
+          div.style.gap = '12px';
+          div.id = `swap-item-${ex.id}`;
+
+          div.innerHTML = `
+            <div class="exercise-thumb">${this.getExerciseSvg(ex.svg)}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700;">${ex.name}</div>
+              <div style="font-size: 0.8rem; color: var(--accent-green);">${ex.category}</div>
+            </div>
+          `;
+
+          div.onclick = () => {
+            document.querySelectorAll('#swap-exercises-list .card').forEach(c => c.style.borderColor = 'var(--border-color)');
+            div.style.borderColor = 'var(--accent-green)';
+            this.swapState.selectedNewExerciseId = ex.id;
+            document.getElementById('btn-confirm-swap-session').disabled = false;
+            document.getElementById('btn-confirm-swap-permanent').disabled = false;
+          };
+
+          container.appendChild(div);
+        });
+      },
+
+      applySwap(isPermanent) {
+        const { exerciseIndex, selectedNewExerciseId } = this.swapState;
+        if (exerciseIndex === null || !selectedNewExerciseId) return;
+
+        const newExData = this.getExercise(selectedNewExerciseId);
+        const activeEx = this.data.activeWorkout.exercises[exerciseIndex];
+        const oldExerciseId = activeEx.exerciseId;
+
+        // 1. Zastąpienie w bieżącej sesji treningowej
+        activeEx.exerciseId = newExData.id;
+        activeEx.historicalName = newExData.name;
+        
+        // Zaktualizuj domyślne ciężary na podstawie historii nowego ćwiczenia
+        const lastPerf = this.getLastPerformance(newExData.id);
+        if (lastPerf) {
+          activeEx.sets.forEach((set, sIdx) => {
+            if (lastPerf[sIdx]) {
+              set.weight = lastPerf[sIdx].weight;
+              set.reps = lastPerf[sIdx].reps;
+            }
+          });
+        }
+
+        // 2. Jeśli wybrano „Zmień plan na stałe”
+        if (isPermanent) {
+          const plan = this.data.plans.find(p => p.id === this.data.activeWorkout.planId);
+          if (plan && plan.items[exerciseIndex]) {
+            plan.items[exerciseIndex].exerciseId = newExData.id;
+          }
+        }
+
+        this.saveStorage();
+        this.closeSwapModal();
+        this.renderWorkout();
+        this.renderPlans();
+
+        const toastMsg = isPermanent ? "Zamieniono ćwiczenie w sesji i zaktualizowano plan na stałe!" : "Zamieniono ćwiczenie wyłącznie na dzisiejszy trening.";
+        alert(toastMsg);
+      },
+
+      /* ------------------------------------------------------------------------
+         TIMER ODPOCZYNKU
+         ------------------------------------------------------------------------ */
+      startRestTimer(seconds) {
+        clearInterval(this.timer.interval);
+        this.timer.remaining = seconds;
+        this.timer.isPaused = false;
+
+        const bar = document.getElementById('rest-timer-bar');
+        bar.style.display = 'block';
+        this.updateTimerDisplay();
+
+        this.timer.interval = setInterval(() => {
+          if (!this.timer.isPaused) {
+            this.timer.remaining--;
+            this.updateTimerDisplay();
+
+            if (this.timer.remaining <= 0) {
+              this.stopTimer();
+              SoundEngine.playRestEndGong();
+              if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+              alert("Czas odpoczynku dobiegł końca! Czas na kolejną serię.");
+            }
+          }
+        }, 1000);
+      },
+
+      updateTimerDisplay() {
+        const m = Math.floor(this.timer.remaining / 60);
+        const s = this.timer.remaining % 60;
+        document.getElementById('timer-display').innerText = 
+          `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      },
+
+      stopTimer() {
+        clearInterval(this.timer.interval);
+        document.getElementById('rest-timer-bar').style.display = 'none';
+      },
+
+      /* ------------------------------------------------------------------------
+         RENDEROWANIE INTERFEJSU
+         ------------------------------------------------------------------------ */
+      renderAll() {
+        this.renderWorkout();
+        this.renderPlans();
+        this.renderHistory();
+        this.renderExercisesLibrary();
+      },
+
+      renderWorkout() {
+        const idleView = document.getElementById('workout-idle-view');
+        const activeView = document.getElementById('workout-active-view');
+
+        if (!this.data.activeWorkout) {
+          idleView.style.display = 'block';
+          activeView.style.display = 'none';
+          
+          const picker = document.getElementById('active-plan-picker');
+          picker.innerHTML = '';
+          
+          this.data.plans.forEach(plan => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <h3 style="margin-bottom: 4px;">${plan.name}</h3>
+                  <div style="font-size: 0.85rem; color: var(--text-muted);">${plan.items.length} ćwiczeń</div>
+                </div>
+                <button class="btn btn-primary" onclick="App.startWorkout('${plan.id}')">Rozpocznij</button>
+              </div>
+            `;
+            picker.appendChild(card);
+          });
+          return;
+        }
+
+        idleView.style.display = 'none';
+        activeView.style.display = 'block';
+        document.getElementById('active-session-plan-title').innerText = this.data.activeWorkout.planName;
+
+        const container = document.getElementById('active-workout-exercises');
+        container.innerHTML = '';
+
+        this.data.activeWorkout.exercises.forEach((ex, exIdx) => {
+          const baseEx = this.getExercise(ex.exerciseId);
+          const lastSets = this.getLastPerformance(ex.exerciseId);
+          
+          let lastPerfText = "Brak poprzednich danych";
+          if (lastSets && lastSets.length > 0) {
+            lastPerfText = lastSets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ');
+          }
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+              <div class="exercise-thumb">${this.getExerciseSvg(baseEx.svg)}</div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <h3 style="font-size: 1.05rem;">${ex.historicalName}</h3>
+                  <button class="btn btn-sm btn-blue" onclick="App.openSwapModal(${exIdx})">Zamień</button>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                  Poprzednio: <span style="color: var(--accent-green);">${lastPerfText}</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                  Cel: ${ex.targetReps} powt. • Przerwa: ${ex.restSec}s
+                </div>
+              </div>
+            </div>
+
+            <table class="series-table">
+              <thead>
+                <tr>
+                  <th>Seria</th>
+                  <th>Ciężar (kg)</th>
+                  <th>Powtórzenia</th>
+                  <th>Ukończono</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${ex.sets.map((s, sIdx) => `
+                  <tr>
+                    <td style="font-weight: 700; color: var(--text-muted);">${s.setNumber}</td>
+                    <td>
+                      <input type="number" step="0.5" value="${s.weight}" 
+                        onchange="App.updateSetField(${exIdx}, ${sIdx}, 'weight', this.value)">
+                    </td>
+                    <td>
+                      <input type="number" step="1" value="${s.reps}" 
+                        onchange="App.updateSetField(${exIdx}, ${sIdx}, 'reps', this.value)">
+                    </td>
+                    <td>
+                      <button class="btn-check ${s.completed ? 'completed' : ''}" 
+                        onclick="App.toggleSetCompleted(${exIdx}, ${sIdx})">
+                        ${s.completed ? '✓' : ''}
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          container.appendChild(card);
+        });
+
+        // Przycisk przerwania na samym dole
+        const cancelDiv = document.createElement('div');
+        cancelDiv.style.textAlign = 'center';
+        cancelDiv.style.marginTop = '24px';
+        cancelDiv.innerHTML = `<button class="btn btn-danger btn-sm" onclick="App.cancelActiveWorkout()">Anuluj i porzuć sesję</button>`;
+        container.appendChild(cancelDiv);
+      },
+
+      renderPlans() {
+        const container = document.getElementById('plans-list');
+        container.innerHTML = '';
+
+        this.data.plans.forEach((plan, planIdx) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          
+          let exercisesHtml = plan.items.map((item, itemIdx) => {
+            const ex = this.getExercise(item.exerciseId);
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div class="exercise-thumb" style="width: 40px; height: 40px;">${this.getExerciseSvg(ex.svg)}</div>
+                  <div>
+                    <div style="font-weight: 600; font-size: 0.95rem;">${ex.name}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${item.sets} serie • ${item.targetReps} powt. • ${item.restSec}s</div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                  <button class="btn btn-sm" onclick="App.movePlanItem(${planIdx}, ${itemIdx}, -1)">↑</button>
+                  <button class="btn btn-sm" onclick="App.movePlanItem(${planIdx}, ${itemIdx}, 1)">↓</button>
+                  <button class="btn btn-sm btn-danger" onclick="App.removePlanItem(${planIdx}, ${itemIdx})">✕</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="color: var(--accent-green);">${plan.name}</h3>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-sm" onclick="App.duplicatePlan(${planIdx})">Klonuj</button>
+                <button class="btn btn-sm btn-danger" onclick="App.deletePlan(${planIdx})">Usuń</button>
+              </div>
+            </div>
+            <div>${exercisesHtml}</div>
+            <div style="margin-top: 12px; display: flex; gap: 8px;">
+              <button class="btn btn-sm btn-block" onclick="App.addExerciseToPlanPrompt(${planIdx})">+ Dodaj ćwiczenie</button>
+              <button class="btn btn-sm" onclick="App.renamePlanPrompt(${planIdx})">Zmień nazwę</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      },
+
+      renderHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = '';
+
+        if (this.data.history.length === 0) {
+          container.innerHTML = `<p style="color: var(--text-muted); text-align: center; margin-top: 30px;">Brak zapisanych treningów. Ukończ pierwszą sesję!</p>`;
+          return;
+        }
+
+        const reversedHistory = [...this.data.history].reverse();
+
+        reversedHistory.forEach((session, revIdx) => {
+          const originalIdx = this.data.history.length - 1 - revIdx;
+          const dateStr = new Date(session.date).toLocaleString('pl-PL', { 
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+          });
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          
+          let exercisesSummary = session.exercises.map(ex => {
+            const completedSets = ex.sets.filter(s => s.completed);
+            const setsStr = completedSets.map(s => `${s.weight}kg×${s.reps}`).join(', ');
+            return `
+              <div style="font-size: 0.88rem; margin-bottom: 4px;">
+                <strong>${ex.name}:</strong> <span style="color: var(--accent-green);">${setsStr || 'Brak ukończonych serii'}</span>
+              </div>
+            `;
+          }).join('');
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">${dateStr}</div>
+                <h3 style="margin-top: 2px;">${session.planName}</h3>
+              </div>
+              <button class="btn btn-sm btn-blue" onclick="App.openHistoryEditModal(${originalIdx})">Edytuj</button>
+            </div>
+            <div style="margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 8px;">
+              ${exercisesSummary}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      },
+
+      renderExercisesLibrary() {
+        const container = document.getElementById('exercises-library-list');
+        container.innerHTML = '';
+        
+        const search = document.getElementById('exercise-search').value.toLowerCase();
+        const muscle = document.getElementById('exercise-muscle-filter').value;
+
+        const filtered = this.data.exercises.filter(ex => {
+          const matchSearch = ex.name.toLowerCase().includes(search) || ex.desc.toLowerCase().includes(search);
+          const matchMuscle = muscle === 'ALL' || ex.category === muscle;
+          return matchSearch && matchMuscle;
+        });
+
+        filtered.forEach(ex => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.display = 'flex';
+          card.style.gap = '14px';
+          card.style.alignItems = 'flex-start';
+
+          card.innerHTML = `
+            <div class="exercise-thumb" style="width: 56px; height: 56px; margin-top: 4px;">${this.getExerciseSvg(ex.svg)}</div>
+            <div style="flex: 1;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 1.05rem;">${ex.name}</h3>
+                <span class="badge badge-green">${ex.category}</span>
+              </div>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">${ex.desc}</p>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      },
+
+      /* ------------------------------------------------------------------------
+         EDYCJA PLANÓW
+         ------------------------------------------------------------------------ */
+      movePlanItem(planIdx, itemIdx, dir) {
+        const plan = this.data.plans[planIdx];
+        const targetIdx = itemIdx + dir;
+        if (targetIdx < 0 || targetIdx >= plan.items.length) return;
+        
+        const temp = plan.items[itemIdx];
+        plan.items[itemIdx] = plan.items[targetIdx];
+        plan.items[targetIdx] = temp;
+        this.saveStorage();
+        this.renderPlans();
+      },
+
+      removePlanItem(planIdx, itemIdx) {
+        if (confirm("Czy na pewno chcesz usunąć to ćwiczenie z planu?")) {
+          this.data.plans[planIdx].items.splice(itemIdx, 1);
+          this.saveStorage();
+          this.renderPlans();
+        }
+      },
+
+      addExerciseToPlanPrompt(planIdx) {
+        const available = this.data.exercises.map((e, idx) => `${idx + 1}. ${e.name} (${e.category})`).join('\n');
+        const choice = prompt(`Wpisz numer ćwiczenia, które chcesz dodać:\n\n${available}`);
+        const num = parseInt(choice) - 1;
+        
+        if (num >= 0 && num < this.data.exercises.length) {
+          const chosenEx = this.data.exercises[num];
+          const sets = parseInt(prompt("Liczba serii:", "3")) || 3;
+          const reps = prompt("Zakres powtórzeń:", "8-10") || "8-10";
+          const rest = parseInt(prompt("Odpoczynek w sekundach:", "90")) || 90;
+
+          this.data.plans[planIdx].items.push({
+            exerciseId: chosenEx.id,
+            sets: sets,
+            targetReps: reps,
+            restSec: rest
+          });
+
+          this.saveStorage();
+          this.renderPlans();
+        }
+      },
+
+      renamePlanPrompt(planIdx) {
+        const newName = prompt("Wpisz nową nazwę planu:", this.data.plans[planIdx].name);
+        if (newName && newName.trim()) {
+          this.data.plans[planIdx].name = newName.trim();
+          this.saveStorage();
+          this.renderPlans();
+        }
+      },
+
+      duplicatePlan(planIdx) {
+        const original = this.data.plans[planIdx];
+        const copy = JSON.parse(JSON.stringify(original));
+        copy.id = 'plan_' + Date.now();
+        copy.name = `${original.name} (Kopia)`;
+        this.data.plans.push(copy);
+        this.saveStorage();
+        this.renderPlans();
+      },
+
+      deletePlan(planIdx) {
+        if (this.data.plans.length <= 1) {
+          alert("Musisz posiadać co najmniej jeden plan.");
+          return;
+        }
+        if (confirm(`Czy na pewno usunąć plan "${this.data.plans[planIdx].name}"?`)) {
+          this.data.plans.splice(planIdx, 1);
+          this.saveStorage();
+          this.renderPlans();
+        }
+      },
+
+      createNewPlan() {
+        const name = prompt("Podaj nazwę nowego planu:", "Nowy Plan");
+        if (name && name.trim()) {
+          this.data.plans.push({
+            id: 'plan_' + Date.now(),
+            name: name.trim(),
+            items: []
+          });
+          this.saveStorage();
+          this.renderPlans();
+        }
+      },
+
+      /* ------------------------------------------------------------------------
+         KOREKTY W HISTORII
+         ------------------------------------------------------------------------ */
+      currentEditingHistoryIndex: null,
+      openHistoryEditModal(idx) {
+        this.currentEditingHistoryIndex = idx;
+        const session = this.data.history[idx];
+        document.getElementById('hist-modal-title').innerText = `Edycja: ${session.planName}`;
+        
+        const container = document.getElementById('hist-modal-body');
+        container.innerHTML = '';
+
+        session.exercises.forEach((ex, exIdx) => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.style.marginBottom = '10px';
+          div.innerHTML = `<h4 style="margin-bottom: 8px;">${ex.name}</h4>`;
+
+          ex.sets.forEach((s, sIdx) => {
+            div.innerHTML += `
+              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 0.8rem; width: 50px;">Seria ${s.setNumber}:</span>
+                <input type="number" step="0.5" id="hist_w_${exIdx}_${sIdx}" value="${s.weight}" style="width: 80px;" placeholder="kg">
+                <input type="number" step="1" id="hist_r_${exIdx}_${sIdx}" value="${s.reps}" style="width: 80px;" placeholder="powt">
+                <label style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; margin: 0;">
+                  <input type="checkbox" id="hist_c_${exIdx}_${sIdx}" ${s.completed ? 'checked' : ''}> Zaliczona
+                </label>
+              </div>
+            `;
+          });
+          container.appendChild(div);
+        });
+
+        document.getElementById('history-edit-modal').style.display = 'flex';
+      },
+
+      closeHistoryModal() {
+        document.getElementById('history-edit-modal').style.display = 'none';
+        this.currentEditingHistoryIndex = null;
+      },
+
+      saveHistoryCorrections() {
+        if (this.currentEditingHistoryIndex === null) return;
+        const session = this.data.history[this.currentEditingHistoryIndex];
+
+        session.exercises.forEach((ex, exIdx) => {
+          ex.sets.forEach((s, sIdx) => {
+            const wVal = document.getElementById(`hist_w_${exIdx}_${sIdx}`).value;
+            const rVal = document.getElementById(`hist_r_${exIdx}_${sIdx}`).value;
+            const cVal = document.getElementById(`hist_c_${exIdx}_${sIdx}`).checked;
+
+            s.weight = parseFloat(wVal) || 0;
+            s.reps = parseInt(rVal) || 0;
+            s.completed = cVal;
+          });
+        });
+
+        this.saveStorage();
+        this.closeHistoryModal();
+        this.renderHistory();
+        alert("Poprawki w historii zostały pomyślnie zapisane.");
+      },
+
+      /* ------------------------------------------------------------------------
+         KOPIA ZAPASOWA JSON & NAWIGACJA
+         ------------------------------------------------------------------------ */
+      exportBackup() {
+        const fullBackup = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          plans: this.data.plans,
+          exercises: this.data.exercises,
+          history: this.data.history
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullBackup, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `trening_backup_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      },
+
+      importBackup(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (imported.plans && imported.exercises && imported.history) {
+              if (confirm("Zastąpić wszystkie aktualne dane kopią z pliku?")) {
+                this.data.plans = imported.plans;
+                this.data.exercises = imported.exercises;
+                this.data.history = imported.history;
+                this.saveStorage();
+                this.renderAll();
+                alert("Kopia zapasowa została wczytana poprawnie!");
+              }
+            } else {
+              alert("Plik JSON nie zawiera poprawnych danych treningowych.");
+            }
+          } catch(err) {
+            alert("Błąd podczas odczytu pliku: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      resetToFactory() {
+        if (confirm("UWAGA: Spowoduje to wyczyszczenie zmian i powrót do pierwotnych planów A, B i C. Kontynuować?")) {
+          this.data.plans = JSON.parse(JSON.stringify(DEFAULT_PLANS));
+          this.data.exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
+          this.saveStorage();
+          this.renderAll();
+          alert("Przywrócono domyślną bazę ćwiczeń i planów.");
+        }
+      },
+
+      setupNavigation() {
+        document.querySelectorAll('.nav-item').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const viewTarget = btn.getAttribute('data-view');
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(`view-${viewTarget}`).classList.add('active');
+            window.scrollTo(0, 0);
+          });
+        });
+      },
+
+      bindEvents() {
+        document.getElementById('btn-finish-workout').onclick = () => this.finishWorkout();
+        document.getElementById('btn-new-plan').onclick = () => this.createNewPlan();
+
+        // Timer bar
+        document.getElementById('btn-timer-plus').onclick = () => { this.timer.remaining += 15; this.updateTimerDisplay(); };
+        document.getElementById('btn-timer-toggle').onclick = (e) => {
+          this.timer.isPaused = !this.timer.isPaused;
+          e.target.innerText = this.timer.isPaused ? "Wznów" : "Pauza";
+        };
+        document.getElementById('btn-timer-skip').onclick = () => this.stopTimer();
+
+        // Modal zamiany
+        document.getElementById('swap-search').oninput = (e) => this.renderSwapList(e.target.value);
+        document.getElementById('btn-confirm-swap-session').onclick = () => this.applySwap(false);
+        document.getElementById('btn-confirm-swap-permanent').onclick = () => this.applySwap(true);
+
+        // Edycja historii
+        document.getElementById('btn-save-hist-changes').onclick = () => this.saveHistoryCorrections();
+
+        // Filtry ćwiczeń
+        document.getElementById('exercise-search').oninput = () => this.renderExercisesLibrary();
+        document.getElementById('exercise-muscle-filter').onchange = () => this.renderExercisesLibrary();
+
+        // Ustawienia & Backup
+        document.getElementById('btn-export-json').onclick = () => this.exportBackup();
+        document.getElementById('import-json-input').onchange = (e) => {
+          if (e.target.files.length > 0) this.importBackup(e.target.files[0]);
+        };
+        document.getElementById('btn-reset-factory').onclick = () => this.resetToFactory();
+        document.getElementById('btn-test-sound').onclick = () => SoundEngine.playRestEndGong();
+      }
+    };
+
+    // Start po załadowaniu drzewa DOM
+    window.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+</html>
